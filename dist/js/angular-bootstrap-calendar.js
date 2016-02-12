@@ -696,16 +696,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        vm.dayViewEnd,
 	        vm.dayViewSplit
 	      );
+
+	      vm.view = calendarHelper.getWeekView(vm.events, vm.viewDate, vm.showTimes);
 	      if (vm.showTimes) {
-	        vm.view = calendarHelper.getWeekViewWithTimes(
+	        vm.viewWithTimes = calendarHelper.getWeekViewWithTimes(
 	          vm.events,
 	          vm.viewDate,
 	          vm.dayViewStart,
 	          vm.dayViewEnd,
 	          vm.dayViewSplit
 	        );
-	      } else {
-	        vm.view = calendarHelper.getWeekView(vm.events, vm.viewDate);
 	      }
 	    });
 
@@ -750,6 +750,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.tempTimeChanged = function(event, minuteChunksMoved) {
 	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
 	      event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	    };
+
+	    vm.eventResizeComplete = function(event, edge, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      var start = moment(event.startsAt);
+	      var end = moment(event.endsAt);
+	      if (edge === 'start') {
+	        start.add(minutesDiff, 'minutes');
+	      } else {
+	        end.add(minutesDiff, 'minutes');
+	      }
+	      delete event.tempStartsAt;
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarNewEventStart: start.toDate(),
+	        calendarNewEventEnd: end.toDate()
+	      });
+	    };
+
+	    vm.eventResized = function(event, edge, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      if (edge === 'start') {
+	        event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	      }
 	    };
 
 	  }])
@@ -1740,7 +1765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    }
 
-	    function getWeekView(events, viewDate) {
+	    function getWeekView(events, viewDate, filterOneDayEvents) {
 
 	      var startOfWeek = moment(viewDate).startOf('week');
 	      var endOfWeek = moment(viewDate).endOf('week');
@@ -1758,6 +1783,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	          isWeekend: [0, 6].indexOf(dayCounter.day()) > -1
 	        });
 	        dayCounter.add(1, 'day');
+	      }
+
+	      if (filterOneDayEvents) {
+	        events = events.filter(function(event) {
+	          return !moment(event.startsAt).isSame(moment(event.endsAt), 'day');
+	        });
 	      }
 
 	      var eventsSorted = filterEventsInPeriod(events, startOfWeek, endOfWeek).map(function(event) {
@@ -1800,8 +1831,45 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    }
 
-	    function getDayView(events, viewDate, dayViewStart, dayViewEnd, dayViewSplit) {
+	    function getCrossingsCount(event, dayEvents) {
+	      var eventStart = moment(event.startsAt);
+	      var eventEnd = moment(event.endsAt);
 
+	      return dayEvents.filter(function(ev) {
+
+	        return event.$id !== ev.$id &&
+	          (moment(ev.startsAt).isBetween(eventStart, eventEnd) ||
+	          moment(ev.startsAt).isSame(eventStart) ||
+	          moment(ev.endsAt).isBetween(eventStart, eventEnd) ||
+	          moment(ev.endsAt).isSame(eventEnd) ||
+	          moment(ev.startsAt).isBefore(eventStart) && moment(ev.endsAt).isAfter(eventEnd));
+	      }).length;
+	    }
+
+	    function eventsComparer(a, b) {
+	      var aStart = moment(a.startsAt);
+	      var bStart = moment(b.startsAt);
+
+	      if (aStart.isBefore(bStart)) {
+	        return -1;
+	      }
+
+	      if (aStart.isSame(bStart)) {
+	        var aEnd = moment(a.endsAt);
+	        var bEnd = moment(b.endsAt);
+
+	        if (aEnd.isSame(bEnd)) {
+	          return 0;
+	        } else if (aEnd.isAfter(bEnd)) {
+	          return -1;
+	        }
+	        return 1;
+	      }
+	      return 1;
+	    }
+
+	    function getDayView(events, viewDate, dayViewStart, dayViewEnd, dayViewSplit, isWeekViewWithTimes) {
+	      var baseBucketWidth = isWeekViewWithTimes ? 14.285714285714285 : 150;
 	      var dayStartHour = moment(dayViewStart || '00:00', 'HH:mm').hours();
 	      var dayEndHour = moment(dayViewEnd || '23:00', 'HH:mm').hours();
 	      var hourHeight = (60 / dayViewSplit) * 30;
@@ -1816,7 +1884,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        moment(viewDate).endOf('day').toDate()
 	      );
 
-	      return eventsInPeriod.map(function(event) {
+	      return eventsInPeriod.sort(eventsComparer).map(function(event) {
 	        if (moment(event.startsAt).isBefore(calendarStart)) {
 	          event.top = 0;
 	        } else {
@@ -1842,12 +1910,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        event.left = 0;
-
 	        return event;
 	      }).filter(function(event) {
 	        return event.height > 0;
 	      }).map(function(event) {
-
 	        var cannotFitInABucket = true;
 	        buckets.forEach(function(bucket, bucketIndex) {
 	          var canFitInThisBucket = true;
@@ -1861,36 +1927,47 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	          if (canFitInThisBucket && cannotFitInABucket) {
 	            cannotFitInABucket = false;
-	            event.left = bucketIndex * 150;
+	            event.left = bucketIndex * baseBucketWidth;
+	            if (isWeekViewWithTimes) {
+	              event.bucketIndex = buckets.length;
+	            }
 	            buckets[bucketIndex].push(event);
 	          }
-
 	        });
 
 	        if (cannotFitInABucket) {
-	          event.left = buckets.length * 150;
+	          event.left = buckets.length * baseBucketWidth;
+	          if (isWeekViewWithTimes) {
+	            event.bucketIndex = buckets.length;
+	          }
 	          buckets.push([event]);
 	        }
-
 	        return event;
-
+	      }).map(function(event) {
+	        if (isWeekViewWithTimes) {
+	          event.width = getCrossingsCount(event, eventsInPeriod) > 0 ? baseBucketWidth / buckets.length : baseBucketWidth;
+	          event.left = event.bucketIndex * baseBucketWidth / (buckets.length);
+	          delete event.bucketIndex;
+	        }
+	        return event;
 	      });
-
 	    }
 
-	    function getWeekViewWithTimes(events, viewDate, dayViewStart, dayViewEnd, dayViewSplit) {
-	      var weekView = getWeekView(events, viewDate);
+	    function getWeekViewWithTimes(events, currentDay, dayViewStart, dayViewEnd, dayViewSplit) {
+	      var weekView = getWeekView(events, currentDay, false);
 	      var newEvents = [];
 	      weekView.days.forEach(function(day) {
 	        var dayEvents = weekView.events.filter(function(event) {
-	          return moment(event.startsAt).startOf('day').isSame(moment(day.date).startOf('day'));
+	          return moment(event.startsAt).isSame(moment(day.date), 'day') &&
+	            moment(event.endsAt).isSame(moment(day.date), 'day');
 	        });
 	        var newDayEvents = getDayView(
 	          dayEvents,
 	          day.date,
 	          dayViewStart,
 	          dayViewEnd,
-	          dayViewSplit
+	          dayViewSplit,
+	          true
 	        );
 	        newEvents = newEvents.concat(newDayEvents);
 	      });
@@ -1927,7 +2004,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      adjustEndDateFromStartDiff: adjustEndDateFromStartDiff,
 	      formatDate: formatDate,
 	      loadTemplates: loadTemplates,
-	      eventIsInPeriod: eventIsInPeriod //expose for testing only
+	      eventIsInPeriod: eventIsInPeriod, //expose for testing only
+	      getCrossingsCount: getCrossingsCount, //expose for testing only
+	      eventsComparer: eventsComparer //expose for testing only
 	    };
 
 	  }]);

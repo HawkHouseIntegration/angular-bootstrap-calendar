@@ -203,13 +203,13 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 20 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"cal-slide-box\" uib-collapse=\"vm.isCollapsed\" mwl-collapse-fallback=\"vm.isCollapsed\">\n  <div class=\"cal-slide-content cal-event-list\">\n    <ul class=\"unstyled list-unstyled\">\n\n      <li\n        ng-repeat=\"event in vm.events | orderBy:'startsAt' track by event.$id\"\n        ng-class=\"event.cssClass\"\n        mwl-draggable=\"event.draggable === true\"\n        drop-data=\"{event: event}\">\n        <span class=\"pull-left event\" ng-class=\"'event-' + event.type\"></span>\n        &nbsp;\n        <a\n          href=\"javascript:;\"\n          class=\"event-item\"\n          ng-click=\"vm.onEventClick({calendarEvent: event})\">\n          <span ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"></span>\n          (<span ng-bind=\"event.startsAt | calendarDate:(isMonthView ? 'time' : 'datetime'):true\"></span><span ng-if=\"vm.calendarConfig.displayEventEndTimes && event.endsAt\"> - <span ng-bind=\"event.endsAt | calendarDate:(isMonthView ? 'time' : 'datetime'):true\"></span></span>)\n        </a>\n\n        <a\n          href=\"javascript:;\"\n          class=\"event-item-edit\"\n          ng-if=\"vm.editEventHtml && event.editable !== false\"\n          ng-bind-html=\"vm.$sce.trustAsHtml(vm.editEventHtml)\"\n          ng-click=\"vm.onEditEventClick({calendarEvent: event})\">\n        </a>\n\n        <a\n          href=\"javascript:;\"\n          class=\"event-item-delete\"\n          ng-if=\"vm.deleteEventHtml && event.deletable !== false\"\n          ng-bind-html=\"vm.$sce.trustAsHtml(vm.deleteEventHtml)\"\n          ng-click=\"vm.onDeleteEventClick({calendarEvent: event})\">\n        </a>\n      </li>\n\n    </ul>\n  </div>\n</div>\n";
+	module.exports = "<div class=\"cal-slide-box\" uib-collapse=\"vm.isCollapsed\" mwl-collapse-fallback=\"vm.isCollapsed\">\n  <div class=\"cal-slide-content cal-event-list\">\n    <ul class=\"unstyled list-unstyled\">\n\n      <li\n        ng-repeat=\"event in vm.events | orderBy:'startsAt' track by event.$id\"\n        mwl-draggable=\"event.draggable === true\"\n        drop-data=\"{event: event}\">\n        <span class=\"pull-left event\" ng-class=\"[event.cssClass, 'event-' + event.type]\"></span>\n        &nbsp;\n        <a\n          href=\"javascript:;\"\n          class=\"event-item\"\n          ng-click=\"vm.onEventClick({calendarEvent: event})\">\n          <span ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"></span>\n          (<span ng-bind=\"event.startsAt | calendarDate:(isMonthView ? 'time' : 'datetime'):true\"></span><span ng-if=\"vm.calendarConfig.displayEventEndTimes && event.endsAt\"> - <span ng-bind=\"event.endsAt | calendarDate:(isMonthView ? 'time' : 'datetime'):true\"></span></span>)\n        </a>\n\n        <a\n          href=\"javascript:;\"\n          class=\"event-item-edit\"\n          ng-if=\"vm.editEventHtml && event.editable !== false\"\n          ng-bind-html=\"vm.$sce.trustAsHtml(vm.editEventHtml)\"\n          ng-click=\"vm.onEditEventClick({calendarEvent: event})\">\n        </a>\n\n        <a\n          href=\"javascript:;\"\n          class=\"event-item-delete\"\n          ng-if=\"vm.deleteEventHtml && event.deletable !== false\"\n          ng-bind-html=\"vm.$sce.trustAsHtml(vm.deleteEventHtml)\"\n          ng-click=\"vm.onDeleteEventClick({calendarEvent: event})\">\n        </a>\n      </li>\n\n    </ul>\n  </div>\n</div>\n";
 
 /***/ },
 /* 21 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"cal-week-box\" ng-class=\"{'cal-day-box': vm.showTimes}\">\n  <div class=\"cal-row-fluid cal-row-head\">\n\n    <div\n      class=\"cal-cell1\"\n      ng-repeat=\"day in vm.view.days track by $index\"\n      ng-class=\"{\n        'cal-day-weekend': day.isWeekend,\n        'cal-day-past': day.isPast,\n        'cal-day-today': day.isToday,\n        'cal-day-future': day.isFuture}\"\n      mwl-element-dimensions=\"vm.dayColumnDimensions\">\n\n      <span ng-bind=\"day.weekDayLabel\"></span>\n      <br>\n      <small>\n        <span\n          data-cal-date\n          ng-click=\"vm.calendarCtrl.dateClicked(day.date)\"\n          class=\"pointer\"\n          ng-bind=\"day.dayLabel\">\n        </span>\n      </small>\n\n    </div>\n\n  </div>\n\n  <div class=\"cal-day-panel clearfix\" ng-style=\"{height: vm.showTimes ? (vm.dayViewHeight + 'px') : 'auto'}\">\n\n    <mwl-calendar-hour-list\n      day-view-start=\"vm.dayViewStart\"\n      day-view-end=\"vm.dayViewEnd\"\n      day-view-split=\"vm.dayViewSplit\"\n      view-date=\"vm.viewDate\"\n      on-timespan-click=\"vm.onTimespanClick\"\n      ng-if=\"vm.showTimes\">\n    </mwl-calendar-hour-list>\n\n    <div class=\"row\">\n      <div class=\"col-xs-12\">\n        <div\n          class=\"cal-row-fluid \"\n          ng-repeat=\"event in vm.view.events track by event.$id\">\n          <div\n            ng-class=\"'cal-cell' + (vm.showTimes ? 1 : event.daySpan) + (vm.showTimes ? '' : ' cal-offset' + event.dayOffset) + ' day-highlight dh-event-' + event.type + ' ' + event.cssClass\"\n            ng-style=\"{\n              top: vm.showTimes ? ((event.top + 2) + 'px') : 'auto',\n              position: vm.showTimes ? 'absolute' : 'inherit',\n              width: vm.showTimes ? (vm.dayColumnDimensions.width + 'px') : '',\n              left: vm.showTimes ? (vm.dayColumnDimensions.width * event.dayOffset) + 15 + 'px' : ''\n            }\"\n            data-event-class\n            mwl-draggable=\"event.draggable === true\"\n            axis=\"vm.showTimes ? 'xy' : 'x'\"\n            snap-grid=\"vm.showTimes ? {x: vm.dayColumnDimensions.width, y: 30} : {x: vm.dayColumnDimensions.width}\"\n            on-drag=\"vm.tempTimeChanged(event, y)\"\n            on-drag-end=\"vm.weekDragged(event, x, y)\"\n            mwl-resizable=\"event.resizable === true && event.endsAt && !vm.showTimes\"\n            resize-edges=\"{left: true, right: true}\"\n            on-resize-end=\"vm.weekResized(event, edge, x)\">\n            <strong ng-bind=\"(event.tempStartsAt || event.startsAt) | calendarDate:'time':true\" ng-show=\"vm.showTimes\"></strong>\n            <a\n              href=\"javascript:;\"\n              ng-click=\"vm.onEventClick({calendarEvent: event})\"\n              class=\"event-item\"\n              ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"\n              uib-tooltip-html=\"event.title | calendarTrustAsHtml\"\n              tooltip-placement=\"left\"\n              tooltip-append-to-body=\"true\">\n            </a>\n          </div>\n        </div>\n      </div>\n\n    </div>\n\n  </div>\n</div>\n";
+	module.exports = "<div class=\"cal-week-box\" ng-class=\"{'cal-day-box': vm.showTimes}\">\n  <div class=\"cal-row-fluid cal-row-head\">\n\n    <div\n      class=\"cal-cell1\"\n      ng-repeat=\"day in vm.view.days track by $index\"\n      ng-class=\"{\n        'cal-day-weekend': day.isWeekend,\n        'cal-day-past': day.isPast,\n        'cal-day-today': day.isToday,\n        'cal-day-future': day.isFuture}\"\n      mwl-element-dimensions=\"vm.dayColumnDimensions\">\n\n      <span ng-bind=\"day.weekDayLabel\"></span>\n      <br>\n      <small>\n        <span\n          data-cal-date\n          ng-click=\"vm.calendarCtrl.dateClicked(day.date)\"\n          class=\"pointer\"\n          ng-bind=\"day.dayLabel\">\n        </span>\n      </small>\n\n    </div>\n\n  </div>\n\n  <div class=\"cal-day-panel clearfix\" ng-style=\"{height: vm.showTimes ? (vm.dayViewHeight + 'px') : 'auto'}\">\n    <div class=\"row\">\n      <div class=\"col-xs-12\">\n        <div\n          class=\"cal-row-fluid\"\n          ng-repeat=\"event in vm.view.events track by event.$id\">\n          <div\n            ng-class=\"'cal-cell' + event.daySpan + ' cal-offset' + event.dayOffset + ' day-highlight dh-event-' + event.type + ' ' + event.cssClass\"\n            ng-style=\"{top: 'auto', position: 'inherit'}\"\n            data-event-class\n            mwl-draggable=\"event.draggable === true\"\n            axis=\"'x'\"\n            snap-grid=\"{x: vm.dayColumnDimensions.width}\"\n            on-drag=\"vm.tempTimeChanged(event, y)\"\n            on-drag-end=\"vm.weekDragged(event, x, y)\"\n            mwl-resizable=\"event.resizable === true && event.endsAt\"\n            resize-edges=\"{left: true, right: true}\"\n            on-resize-end=\"vm.weekResized(event, edge, x)\">\n            <strong ng-bind=\"(event.tempStartsAt || event.startsAt) | calendarDate:'time':true\" ng-show=\"vm.showTimes\"></strong>\n            <a\n              href=\"javascript:;\"\n              ng-click=\"vm.onEventClick({calendarEvent: event})\"\n              class=\"event-item\"\n              ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"\n              tooltip-html-unsafe=\"{{ event.title }}\"\n              tooltip-placement=\"left\"\n              tooltip-append-to-body=\"true\">\n            </a>\n          </div>\n        </div>\n      </div>\n\n    </div>\n\n    <mwl-calendar-hour-list\n      day-view-start=\"vm.dayViewStart\"\n      day-view-end=\"vm.dayViewEnd\"\n      day-view-split=\"vm.dayViewSplit\"\n      view-date=\"vm.viewDate\"\n      on-timespan-click=\"vm.onTimespanClick\"\n      ng-if=\"vm.showTimes\">\n    </mwl-calendar-hour-list>\n    <div class=\"row\" ng-if=\"vm.showTimes\">\n      <div class=\"col-xs-12\">\n        <div\n          class=\"cal-row-fluid \"\n          ng-repeat=\"event in vm.viewWithTimes.events track by event.$id\">\n          <div\n            ng-class=\"'cal-cell' + 1 + ' cal-offset' + event.dayOffset + ' day-highlight dh-event-' + event.type + ' ' + event.cssClass\"\n            ng-style=\"{top: ((event.top + 2) + 'px'), position: 'absolute', height: event.height + 'px', left: event.left + '%', width: event.width + '%'}\"\n            data-event-class\n            mwl-draggable=\"event.draggable === true\"\n            axis=\"vm.showTimes ? 'xy' : 'x'\"\n            snap-grid=\"{x: vm.dayColumnDimensions.width, y: 30}\"\n            on-drag=\"vm.tempTimeChanged(event, y)\"\n            on-drag-end=\"vm.weekDragged(event, x, y)\"\n            mwl-resizable=\"event.resizable === true && event.endsAt\"\n            resize-edges=\"{top: true, bottom: true}\"\n            on-resize=\"vm.eventResized(event, edge, y)\"\n            on-resize-end=\"vm.eventResizeComplete(event, edge, y)\">\n            <strong ng-bind=\"(event.tempStartsAt || event.startsAt) | calendarDate:'time':true\"></strong>\n            <a\n              href=\"javascript:;\"\n              ng-click=\"vm.onEventClick({calendarEvent: event})\"\n              class=\"event-item\"\n              ng-bind-html=\"vm.$sce.trustAsHtml(event.title)\"\n              uib-tooltip-html=\"event.title | calendarTrustAsHtml\"\n              tooltip-placement=\"left\"\n              tooltip-append-to-body=\"true\">\n            </a>\n          </div>\n        </div>\n      </div>\n\n    </div>\n\n  </div>\n</div>\n";
 
 /***/ },
 /* 22 */
@@ -779,16 +779,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        vm.dayViewEnd,
 	        vm.dayViewSplit
 	      );
+
+	      vm.view = calendarHelper.getWeekView(vm.events, vm.viewDate, vm.showTimes);
 	      if (vm.showTimes) {
-	        vm.view = calendarHelper.getWeekViewWithTimes(
+	        vm.viewWithTimes = calendarHelper.getWeekViewWithTimes(
 	          vm.events,
 	          vm.viewDate,
 	          vm.dayViewStart,
 	          vm.dayViewEnd,
 	          vm.dayViewSplit
 	        );
-	      } else {
-	        vm.view = calendarHelper.getWeekView(vm.events, vm.viewDate);
 	      }
 	    });
 
@@ -833,6 +833,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.tempTimeChanged = function(event, minuteChunksMoved) {
 	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
 	      event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	    };
+
+	    vm.eventResizeComplete = function(event, edge, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      var start = moment(event.startsAt);
+	      var end = moment(event.endsAt);
+	      if (edge === 'start') {
+	        start.add(minutesDiff, 'minutes');
+	      } else {
+	        end.add(minutesDiff, 'minutes');
+	      }
+	      delete event.tempStartsAt;
+
+	      vm.onEventTimesChanged({
+	        calendarEvent: event,
+	        calendarNewEventStart: start.toDate(),
+	        calendarNewEventEnd: end.toDate()
+	      });
+	    };
+
+	    vm.eventResized = function(event, edge, minuteChunksMoved) {
+	      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
+	      if (edge === 'start') {
+	        event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
+	      }
 	    };
 
 	  }])
@@ -1823,7 +1848,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    }
 
-	    function getWeekView(events, viewDate) {
+	    function getWeekView(events, viewDate, filterOneDayEvents) {
 
 	      var startOfWeek = moment(viewDate).startOf('week');
 	      var endOfWeek = moment(viewDate).endOf('week');
@@ -1841,6 +1866,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	          isWeekend: [0, 6].indexOf(dayCounter.day()) > -1
 	        });
 	        dayCounter.add(1, 'day');
+	      }
+
+	      if (filterOneDayEvents) {
+	        events = events.filter(function(event) {
+	          return !moment(event.startsAt).isSame(moment(event.endsAt), 'day');
+	        });
 	      }
 
 	      var eventsSorted = filterEventsInPeriod(events, startOfWeek, endOfWeek).map(function(event) {
@@ -1883,8 +1914,45 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    }
 
-	    function getDayView(events, viewDate, dayViewStart, dayViewEnd, dayViewSplit) {
+	    function getCrossingsCount(event, dayEvents) {
+	      var eventStart = moment(event.startsAt);
+	      var eventEnd = moment(event.endsAt);
 
+	      return dayEvents.filter(function(ev) {
+
+	        return event.$id !== ev.$id &&
+	          (moment(ev.startsAt).isBetween(eventStart, eventEnd) ||
+	          moment(ev.startsAt).isSame(eventStart) ||
+	          moment(ev.endsAt).isBetween(eventStart, eventEnd) ||
+	          moment(ev.endsAt).isSame(eventEnd) ||
+	          moment(ev.startsAt).isBefore(eventStart) && moment(ev.endsAt).isAfter(eventEnd));
+	      }).length;
+	    }
+
+	    function eventsComparer(a, b) {
+	      var aStart = moment(a.startsAt);
+	      var bStart = moment(b.startsAt);
+
+	      if (aStart.isBefore(bStart)) {
+	        return -1;
+	      }
+
+	      if (aStart.isSame(bStart)) {
+	        var aEnd = moment(a.endsAt);
+	        var bEnd = moment(b.endsAt);
+
+	        if (aEnd.isSame(bEnd)) {
+	          return 0;
+	        } else if (aEnd.isAfter(bEnd)) {
+	          return -1;
+	        }
+	        return 1;
+	      }
+	      return 1;
+	    }
+
+	    function getDayView(events, viewDate, dayViewStart, dayViewEnd, dayViewSplit, isWeekViewWithTimes) {
+	      var baseBucketWidth = isWeekViewWithTimes ? 14.285714285714285 : 150;
 	      var dayStartHour = moment(dayViewStart || '00:00', 'HH:mm').hours();
 	      var dayEndHour = moment(dayViewEnd || '23:00', 'HH:mm').hours();
 	      var hourHeight = (60 / dayViewSplit) * 30;
@@ -1899,7 +1967,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        moment(viewDate).endOf('day').toDate()
 	      );
 
-	      return eventsInPeriod.map(function(event) {
+	      return eventsInPeriod.sort(eventsComparer).map(function(event) {
 	        if (moment(event.startsAt).isBefore(calendarStart)) {
 	          event.top = 0;
 	        } else {
@@ -1925,12 +1993,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        event.left = 0;
-
 	        return event;
 	      }).filter(function(event) {
 	        return event.height > 0;
 	      }).map(function(event) {
-
 	        var cannotFitInABucket = true;
 	        buckets.forEach(function(bucket, bucketIndex) {
 	          var canFitInThisBucket = true;
@@ -1944,36 +2010,47 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	          if (canFitInThisBucket && cannotFitInABucket) {
 	            cannotFitInABucket = false;
-	            event.left = bucketIndex * 150;
+	            event.left = bucketIndex * baseBucketWidth;
+	            if (isWeekViewWithTimes) {
+	              event.bucketIndex = buckets.length;
+	            }
 	            buckets[bucketIndex].push(event);
 	          }
-
 	        });
 
 	        if (cannotFitInABucket) {
-	          event.left = buckets.length * 150;
+	          event.left = buckets.length * baseBucketWidth;
+	          if (isWeekViewWithTimes) {
+	            event.bucketIndex = buckets.length;
+	          }
 	          buckets.push([event]);
 	        }
-
 	        return event;
-
+	      }).map(function(event) {
+	        if (isWeekViewWithTimes) {
+	          event.width = getCrossingsCount(event, eventsInPeriod) > 0 ? baseBucketWidth / buckets.length : baseBucketWidth;
+	          event.left = event.bucketIndex * baseBucketWidth / (buckets.length);
+	          delete event.bucketIndex;
+	        }
+	        return event;
 	      });
-
 	    }
 
-	    function getWeekViewWithTimes(events, viewDate, dayViewStart, dayViewEnd, dayViewSplit) {
-	      var weekView = getWeekView(events, viewDate);
+	    function getWeekViewWithTimes(events, currentDay, dayViewStart, dayViewEnd, dayViewSplit) {
+	      var weekView = getWeekView(events, currentDay, false);
 	      var newEvents = [];
 	      weekView.days.forEach(function(day) {
 	        var dayEvents = weekView.events.filter(function(event) {
-	          return moment(event.startsAt).startOf('day').isSame(moment(day.date).startOf('day'));
+	          return moment(event.startsAt).isSame(moment(day.date), 'day') &&
+	            moment(event.endsAt).isSame(moment(day.date), 'day');
 	        });
 	        var newDayEvents = getDayView(
 	          dayEvents,
 	          day.date,
 	          dayViewStart,
 	          dayViewEnd,
-	          dayViewSplit
+	          dayViewSplit,
+	          true
 	        );
 	        newEvents = newEvents.concat(newDayEvents);
 	      });
@@ -2010,7 +2087,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      adjustEndDateFromStartDiff: adjustEndDateFromStartDiff,
 	      formatDate: formatDate,
 	      loadTemplates: loadTemplates,
-	      eventIsInPeriod: eventIsInPeriod //expose for testing only
+	      eventIsInPeriod: eventIsInPeriod, //expose for testing only
+	      getCrossingsCount: getCrossingsCount, //expose for testing only
+	      eventsComparer: eventsComparer //expose for testing only
 	    };
 
 	  }]);
