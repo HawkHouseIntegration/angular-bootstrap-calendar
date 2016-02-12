@@ -7,15 +7,16 @@ angular
   .controller('MwlCalendarYearCtrl', function($scope, moment, calendarHelper) {
 
     var vm = this;
+    vm.openMonthIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
-      vm.view = calendarHelper.getYearView(vm.events, vm.currentDay, vm.cellModifier);
+      vm.view = calendarHelper.getYearView(vm.events, vm.viewDate, vm.cellModifier);
 
       //Auto open the calendar to the current day if set
-      if (vm.cellIsOpen && !vm.openMonthIndex) {
+      if (vm.cellIsOpen && vm.openMonthIndex === null) {
         vm.openMonthIndex = null;
         vm.view.forEach(function(month) {
-          if (moment(vm.currentDay).startOf('month').isSame(month.date)) {
+          if (moment(vm.viewDate).startOf('month').isSame(month.date)) {
             vm.monthClicked(month, true);
           }
         });
@@ -28,6 +29,7 @@ angular
       if (!monthClickedFirstRun) {
         vm.onTimespanClick({
           calendarDate: month.date.toDate(),
+          calendarCell: month,
           $event: $event
         });
         if ($event && $event.defaultPrevented) {
@@ -61,15 +63,15 @@ angular
     };
 
   })
-  .directive('mwlCalendarYear', function(calendarUseTemplates) {
+  .directive('mwlCalendarYear', function(calendarConfig) {
 
     return {
-      template: calendarUseTemplates ? require('./../templates/calendarYearView.html') : '',
-      restrict: 'EA',
+      templateUrl: calendarConfig.templates.calendarYearView,
+      restrict: 'E',
       require: '^mwlCalendar',
       scope: {
         events: '=',
-        currentDay: '=',
+        viewDate: '=',
         onEventClick: '=',
         onEventTimesChanged: '=',
         onEditEventClick: '=',

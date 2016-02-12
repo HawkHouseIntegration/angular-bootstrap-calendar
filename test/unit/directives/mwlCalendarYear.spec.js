@@ -14,7 +14,7 @@ describe('mwlCalendarYear directive', function() {
     template =
       '<mwl-calendar-year ' +
       'events="events" ' +
-      'current-day="currentDay" ' +
+      'view-date="viewDate" ' +
       'on-event-click="onEventClick" ' +
       'on-event-times-changed="onEventTimesChanged" ' +
       'day-view-start="dayViewStart" ' +
@@ -27,7 +27,7 @@ describe('mwlCalendarYear directive', function() {
 
   function prepareScope(vm) {
     //These variables MUST be set as a minimum for the calendar to work
-    vm.currentDay = calendarDay;
+    vm.viewDate = calendarDay;
     vm.cellIsOpen = true;
     vm.dayViewStart = '06:00';
     vm.dayViewEnd = '22:00';
@@ -92,7 +92,7 @@ describe('mwlCalendarYear directive', function() {
     var yearView = [{date: moment(calendarDay), inMonth: true}];
     sinon.stub(calendarHelper, 'getYearView').returns(yearView);
     scope.$broadcast('calendar.refreshView');
-    expect(calendarHelper.getYearView).to.have.been.calledWith(scope.events, scope.currentDay);
+    expect(calendarHelper.getYearView).to.have.been.calledWith(scope.events, scope.viewDate);
     expect(MwlCalendarCtrl.view).to.equal(yearView);
     expect(MwlCalendarCtrl.openRowIndex).to.equal(0);
     expect(MwlCalendarCtrl.openMonthIndex).to.equal(0);
@@ -106,7 +106,8 @@ describe('mwlCalendarYear directive', function() {
     expect(MwlCalendarCtrl.openMonthIndex).to.equal(0);
     expect(showModal).to.have.been.calledWith('Day clicked', {
       calendarDate: MwlCalendarCtrl.view[0].date.toDate(),
-      $event: undefined
+      $event: undefined,
+      calendarCell: MwlCalendarCtrl.view[0]
     });
 
     //Close event list
@@ -117,11 +118,11 @@ describe('mwlCalendarYear directive', function() {
 
   it('should disable the slidebox if the click event is prevented', function() {
     expect(MwlCalendarCtrl.openRowIndex).to.be.undefined;
-    expect(MwlCalendarCtrl.openMonthIndex).to.be.undefined;
+    expect(MwlCalendarCtrl.openMonthIndex).to.be.null;
     MwlCalendarCtrl.view = [{date: moment(calendarDay), inMonth: true}];
     MwlCalendarCtrl.monthClicked(MwlCalendarCtrl.view[0], false, {defaultPrevented: true});
     expect(MwlCalendarCtrl.openRowIndex).to.be.undefined;
-    expect(MwlCalendarCtrl.openMonthIndex).to.be.undefined;
+    expect(MwlCalendarCtrl.openMonthIndex).to.be.null;
   });
 
   it('should call the callback function when you finish dropping an event', function() {

@@ -8,12 +8,13 @@ angular
 
     var vm = this;
     vm.calendarConfig = calendarConfig;
+    vm.openRowIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
 
       vm.weekDays = calendarHelper.getWeekDayNames();
 
-      vm.view = calendarHelper.getMonthView(vm.events, vm.currentDay, vm.cellModifier);
+      vm.view = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier);
       var rows = Math.floor(vm.view.length / 7);
       vm.monthOffsets = [];
       for (var i = 0; i < rows; i++) {
@@ -21,10 +22,10 @@ angular
       }
 
       //Auto open the calendar to the current day if set
-      if (vm.cellIsOpen && !vm.openRowIndex) {
+      if (vm.cellIsOpen && vm.openRowIndex === null) {
         vm.openDayIndex = null;
         vm.view.forEach(function(day) {
-          if (day.inMonth && moment(vm.currentDay).startOf('day').isSame(day.date)) {
+          if (day.inMonth && moment(vm.viewDate).startOf('day').isSame(day.date)) {
             vm.dayClicked(day, true);
           }
         });
@@ -37,6 +38,7 @@ angular
       if (!dayClickedFirstRun) {
         vm.onTimespanClick({
           calendarDate: day.date.toDate(),
+          calendarCell: day,
           $event: $event
         });
         if ($event && $event.defaultPrevented) {
@@ -71,7 +73,7 @@ angular
 
     };
 
-    vm.handleEventDrop = function(event, newDayDate) {
+    vm.handleEventDrop = function(event, newDayDate, draggedFromDate) {
 
       var newStart = moment(event.startsAt)
         .date(moment(newDayDate).date())
@@ -83,20 +85,21 @@ angular
         calendarEvent: event,
         calendarDate: newDayDate,
         calendarNewEventStart: newStart.toDate(),
-        calendarNewEventEnd: newEnd ? newEnd.toDate() : null
+        calendarNewEventEnd: newEnd ? newEnd.toDate() : null,
+        calendarDraggedFromDate: draggedFromDate
       });
     };
 
   })
-  .directive('mwlCalendarMonth', function(calendarUseTemplates) {
+  .directive('mwlCalendarMonth', function(calendarConfig) {
 
     return {
-      template: calendarUseTemplates ? require('./../templates/calendarMonthView.html') : '',
-      restrict: 'EA',
+      templateUrl: calendarConfig.templates.calendarMonthView,
+      restrict: 'E',
       require: '^mwlCalendar',
       scope: {
         events: '=',
-        currentDay: '=',
+        viewDate: '=',
         onEventClick: '=',
         onEditEventClick: '=',
         onDeleteEventClick: '=',
@@ -105,9 +108,7 @@ angular
         deleteEventHtml: '=',
         cellIsOpen: '=',
         onTimespanClick: '=',
-        cellModifier: '=',
-        cellTemplateUrl: '@',
-        cellEventsTemplateUrl: '@'
+        cellModifier: '='
       },
       controller: 'MwlCalendarMonthCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {

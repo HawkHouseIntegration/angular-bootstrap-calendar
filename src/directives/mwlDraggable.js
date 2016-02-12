@@ -84,7 +84,7 @@ angular
           }
 
           translateElement(elm, 'translate(' + x + 'px, ' + y + 'px)')
-            .css('z-index', 1000)
+            .css('z-index', 50)
             .attr('data-x', x)
             .attr('data-y', y);
 
@@ -110,6 +110,7 @@ angular
 
           $timeout(function() {
             translateElement(elm, '')
+              .css('z-index', 'auto')
               .removeAttr('data-x')
               .removeAttr('data-y')
               .removeClass('dragging-active');

@@ -18,16 +18,16 @@ angular
         vm.dayViewEnd,
         vm.dayViewSplit
       );
-
-      vm.view = calendarHelper.getWeekView(vm.events, vm.currentDay, vm.showTimes);
       if (vm.showTimes) {
-        vm.viewWithTimes = calendarHelper.getWeekViewWithTimes(
+        vm.view = calendarHelper.getWeekViewWithTimes(
           vm.events,
-          vm.currentDay,
+          vm.viewDate,
           vm.dayViewStart,
           vm.dayViewEnd,
           vm.dayViewSplit
         );
+      } else {
+        vm.view = calendarHelper.getWeekView(vm.events, vm.viewDate);
       }
     });
 
@@ -74,41 +74,16 @@ angular
       event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
     };
 
-    vm.eventResizeComplete = function(event, edge, minuteChunksMoved) {
-      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
-      var start = moment(event.startsAt);
-      var end = moment(event.endsAt);
-      if (edge === 'start') {
-        start.add(minutesDiff, 'minutes');
-      } else {
-        end.add(minutesDiff, 'minutes');
-      }
-      delete event.tempStartsAt;
-
-      vm.onEventTimesChanged({
-        calendarEvent: event,
-        calendarNewEventStart: start.toDate(),
-        calendarNewEventEnd: end.toDate()
-      });
-    };
-
-    vm.eventResized = function(event, edge, minuteChunksMoved) {
-      var minutesDiff = minuteChunksMoved * vm.dayViewSplit;
-      if (edge === 'start') {
-        event.tempStartsAt = moment(event.startsAt).add(minutesDiff, 'minutes').toDate();
-      }
-    };
-
   })
-  .directive('mwlCalendarWeek', function(calendarUseTemplates) {
+  .directive('mwlCalendarWeek', function(calendarConfig) {
 
     return {
-      template: calendarUseTemplates ? require('./../templates/calendarWeekView.html') : '',
-      restrict: 'EA',
+      templateUrl: calendarConfig.templates.calendarWeekView,
+      restrict: 'E',
       require: '^mwlCalendar',
       scope: {
         events: '=',
-        currentDay: '=',
+        viewDate: '=',
         onEventClick: '=',
         onEventTimesChanged: '=',
         dayViewStart: '=',

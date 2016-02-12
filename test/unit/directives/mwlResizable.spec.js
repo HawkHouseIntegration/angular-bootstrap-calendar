@@ -10,6 +10,7 @@ describe('mwlresizable directive', function() {
     interactInstance,
     resizableOptions,
     $compile,
+    $timeout,
     template =
       '<div ' +
       'mwl-resizable="resizable" ' +
@@ -18,8 +19,7 @@ describe('mwlresizable directive', function() {
       'on-resize-start="onResizeStart()" ' +
       'on-resize-end="onResizeEnd(x, y)" ' +
       'on-resize="onResize(x, y)" ' +
-      '></div>',
-    $timeout;
+      '></div>';
 
   function prepareScope(vm) {
     //These variables MUST be set as a minimum for the calendar to work
@@ -121,13 +121,7 @@ describe('mwlresizable directive', function() {
     resizableOptions.onstart(event);
     resizableOptions.onmove(event);
     resizableOptions.onend(event);
-
-    // flush timeout(s) for all code under test.
     $timeout.flush();
-
-    // this will throw an exception if there are any pending timeouts.
-    $timeout.verifyNoPendingTasks();
-
     expect(scope.onResizeEnd).to.have.been.calledWith(0, 4);
     expect(angular.element(event.target).css('transform')).to.eql('');
     expect(angular.element(event.target).css('width')).to.eql('30px');

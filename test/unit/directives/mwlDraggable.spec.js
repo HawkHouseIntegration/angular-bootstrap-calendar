@@ -12,6 +12,7 @@ describe('mwlDraggable directive', function() {
     elementTarget,
     $window,
     $compile,
+    $timeout,
     template =
       '<div ' +
       'mwl-draggable="draggable" ' +
@@ -21,8 +22,7 @@ describe('mwlDraggable directive', function() {
       'on-drag-end="onDragEnd(x, y)" ' +
       'on-drag="onDrag(x, y)" ' +
       'drop-data="dropData"' +
-      '></div>',
-    $timeout;
+      '></div>';
 
   function prepareScope(vm) {
     //These variables MUST be set as a minimum for the calendar to work
@@ -90,7 +90,7 @@ describe('mwlDraggable directive', function() {
 
     draggableOptions.onstart(event);
     draggableOptions.onmove(event);
-    expect(angular.element(event.target).css('z-index')).to.equal('1000');
+    expect(angular.element(event.target).css('z-index')).to.equal('50');
     expect(angular.element(event.target).attr('data-y')).to.equal('30');
     expect(angular.element(event.target).attr('data-x')).to.equal('0');
     expect(scope.onDrag).to.have.been.calledWith(0, 1);
@@ -106,18 +106,13 @@ describe('mwlDraggable directive', function() {
     draggableOptions.onstart(event);
     draggableOptions.onmove(event);
     draggableOptions.onend(event);
-
-    // flush timeout(s) for all code under test.
     $timeout.flush();
-
-    // this will throw an exception if there are any pending timeouts.
-    $timeout.verifyNoPendingTasks();
-
     expect(angular.element(event.target).hasClass('dragging-active')).to.be.false;
     expect(angular.element(event.target).css('pointerEvents')).to.equal('auto');
     expect(angular.element(event.target).css('transform')).to.equal('');
     expect(angular.element(event.target).css('-webkit-transform')).to.equal('');
     expect(angular.element(event.target).css('-ms-transform')).to.equal('');
+    expect(angular.element(event.target).css('z-index')).to.equal('auto');
     expect(scope.onDragEnd).to.have.been.calledWith(0, 6);
   });
 
