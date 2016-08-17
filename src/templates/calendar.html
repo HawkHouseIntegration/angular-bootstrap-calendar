@@ -12,13 +12,12 @@
     view-date="vm.viewDate"
     on-event-click="vm.onEventClick"
     on-event-times-changed="vm.onEventTimesChanged"
-    on-edit-event-click="vm.onEditEventClick"
-    on-delete-event-click="vm.onDeleteEventClick"
     on-timespan-click="vm.onTimespanClick"
-    edit-event-html="vm.editEventHtml"
-    delete-event-html="vm.deleteEventHtml"
     cell-is-open="vm.cellIsOpen"
     cell-modifier="vm.cellModifier"
+    slide-box-disabled="vm.slideBoxDisabled"
+    custom-template-urls="vm.customTemplateUrls"
+    template-scope="vm.templateScope"
     ng-switch-when="year">
   </mwl-calendar-year>
 
@@ -27,13 +26,13 @@
     view-date="vm.viewDate"
     on-event-click="vm.onEventClick"
     on-event-times-changed="vm.onEventTimesChanged"
-    on-edit-event-click="vm.onEditEventClick"
-    on-delete-event-click="vm.onDeleteEventClick"
     on-timespan-click="vm.onTimespanClick"
-    edit-event-html="vm.editEventHtml"
-    delete-event-html="vm.deleteEventHtml"
+    on-date-range-select="vm.onDateRangeSelect"
     cell-is-open="vm.cellIsOpen"
     cell-modifier="vm.cellModifier"
+    slide-box-disabled="vm.slideBoxDisabled"
+    custom-template-urls="vm.customTemplateUrls"
+    template-scope="vm.templateScope"
     ng-switch-when="month">
   </mwl-calendar-month>
 
@@ -45,7 +44,12 @@
     day-view-start="vm.dayViewStart"
     day-view-end="vm.dayViewEnd"
     day-view-split="vm.dayViewSplit"
+    day-view-event-chunk-size="vm.dayViewEventChunkSize"
     on-timespan-click="vm.onTimespanClick"
+    on-date-range-select="vm.onDateRangeSelect"
+    custom-template-urls="vm.customTemplateUrls"
+    cell-modifier="vm.cellModifier"
+    template-scope="vm.templateScope"
     ng-switch-when="week">
   </mwl-calendar-week>
 
@@ -55,9 +59,14 @@
     on-event-click="vm.onEventClick"
     on-event-times-changed="vm.onEventTimesChanged"
     on-timespan-click="vm.onTimespanClick"
+    on-date-range-select="vm.onDateRangeSelect"
     day-view-start="vm.dayViewStart"
     day-view-end="vm.dayViewEnd"
     day-view-split="vm.dayViewSplit"
+    day-view-event-chunk-size="vm.dayViewEventChunkSize"
+    custom-template-urls="vm.customTemplateUrls"
+    cell-modifier="vm.cellModifier"
+    template-scope="vm.templateScope"
     ng-switch-when="day">
   </mwl-calendar-day>
 </div>

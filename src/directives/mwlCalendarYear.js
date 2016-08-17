@@ -51,7 +51,9 @@ angular
     };
 
     vm.handleEventDrop = function(event, newMonthDate) {
-      var newStart = moment(event.startsAt).month(moment(newMonthDate).month());
+      var newStart = moment(event.startsAt)
+        .month(moment(newMonthDate).month())
+        .year(moment(newMonthDate).year());
       var newEnd = calendarHelper.adjustEndDateFromStartDiff(event.startsAt, newStart, event.endsAt);
 
       vm.onEventTimesChanged({
@@ -63,10 +65,10 @@ angular
     };
 
   })
-  .directive('mwlCalendarYear', function(calendarConfig) {
+  .directive('mwlCalendarYear', function() {
 
     return {
-      templateUrl: calendarConfig.templates.calendarYearView,
+      template: '<div mwl-dynamic-directive-template name="calendarYearView" overrides="vm.customTemplateUrls"></div>',
       restrict: 'E',
       require: '^mwlCalendar',
       scope: {
@@ -74,13 +76,12 @@ angular
         viewDate: '=',
         onEventClick: '=',
         onEventTimesChanged: '=',
-        onEditEventClick: '=',
-        onDeleteEventClick: '=',
-        editEventHtml: '=',
-        deleteEventHtml: '=',
         cellIsOpen: '=',
         onTimespanClick: '=',
-        cellModifier: '='
+        cellModifier: '=',
+        slideBoxDisabled: '=',
+        customTemplateUrls: '=?',
+        templateScope: '='
       },
       controller: 'MwlCalendarYearCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {

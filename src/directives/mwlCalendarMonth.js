@@ -4,22 +4,20 @@ var angular = require('angular');
 
 angular
   .module('mwl.calendar')
-  .controller('MwlCalendarMonthCtrl', function($scope, moment, calendarHelper, calendarConfig) {
+  .controller('MwlCalendarMonthCtrl', function($scope, moment, calendarHelper, calendarConfig, calendarEventTitle) {
 
     var vm = this;
     vm.calendarConfig = calendarConfig;
+    vm.calendarEventTitle = calendarEventTitle;
     vm.openRowIndex = null;
 
     $scope.$on('calendar.refreshView', function() {
 
       vm.weekDays = calendarHelper.getWeekDayNames();
 
-      vm.view = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier);
-      var rows = Math.floor(vm.view.length / 7);
-      vm.monthOffsets = [];
-      for (var i = 0; i < rows; i++) {
-        vm.monthOffsets.push(i * 7);
-      }
+      var monthView = calendarHelper.getMonthView(vm.events, vm.viewDate, vm.cellModifier);
+      vm.view = monthView.days;
+      vm.monthOffsets = monthView.rowOffsets;
 
       //Auto open the calendar to the current day if set
       if (vm.cellIsOpen && vm.openRowIndex === null) {
@@ -63,10 +61,11 @@ angular
 
       vm.view.forEach(function(day) {
         delete day.highlightClass;
+        delete day.backgroundColor;
         if (shouldAddClass) {
           var dayContainsEvent = day.events.indexOf(event) > -1;
           if (dayContainsEvent) {
-            day.highlightClass = 'day-highlight dh-event-' + event.type;
+            day.backgroundColor = event.color ? event.color.secondary : '';
           }
         }
       });
@@ -77,7 +76,8 @@ angular
 
       var newStart = moment(event.startsAt)
         .date(moment(newDayDate).date())
-        .month(moment(newDayDate).month());
+        .month(moment(newDayDate).month())
+        .year(moment(newDayDate).year());
 
       var newEnd = calendarHelper.adjustEndDateFromStartDiff(event.startsAt, newStart, event.endsAt);
 
@@ -90,25 +90,60 @@ angular
       });
     };
 
+    vm.getWeekNumberLabel = function(day) {
+      var weekNumber = day.date.clone().add(1, 'day').isoWeek();
+      if (typeof calendarConfig.i18nStrings.weekNumber === 'function') {
+        return calendarConfig.i18nStrings.weekNumber({weekNumber: weekNumber});
+      } else {
+        return calendarConfig.i18nStrings.weekNumber.replace('{week}', weekNumber);
+      }
+    };
+
+    vm.onDragSelectStart = function(day) {
+      if (!vm.dateRangeSelect) {
+        vm.dateRangeSelect = {
+          startDate: day.date,
+          endDate: day.date
+        };
+      }
+    };
+
+    vm.onDragSelectMove = function(day) {
+      if (vm.dateRangeSelect) {
+        vm.dateRangeSelect.endDate = day.date;
+      }
+    };
+
+    vm.onDragSelectEnd = function(day) {
+      vm.dateRangeSelect.endDate = day.date;
+      if (vm.dateRangeSelect.endDate > vm.dateRangeSelect.startDate) {
+        vm.onDateRangeSelect({
+          calendarRangeStartDate: vm.dateRangeSelect.startDate.clone().startOf('day').toDate(),
+          calendarRangeEndDate: vm.dateRangeSelect.endDate.clone().endOf('day').toDate()
+        });
+      }
+      delete vm.dateRangeSelect;
+    };
+
   })
-  .directive('mwlCalendarMonth', function(calendarConfig) {
+  .directive('mwlCalendarMonth', function() {
 
     return {
-      templateUrl: calendarConfig.templates.calendarMonthView,
+      template: '<div mwl-dynamic-directive-template name="calendarMonthView" overrides="vm.customTemplateUrls"></div>',
       restrict: 'E',
       require: '^mwlCalendar',
       scope: {
         events: '=',
         viewDate: '=',
         onEventClick: '=',
-        onEditEventClick: '=',
-        onDeleteEventClick: '=',
         onEventTimesChanged: '=',
-        editEventHtml: '=',
-        deleteEventHtml: '=',
+        onDateRangeSelect: '=',
         cellIsOpen: '=',
         onTimespanClick: '=',
-        cellModifier: '='
+        cellModifier: '=',
+        slideBoxDisabled: '=',
+        customTemplateUrls: '=?',
+        templateScope: '='
       },
       controller: 'MwlCalendarMonthCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {

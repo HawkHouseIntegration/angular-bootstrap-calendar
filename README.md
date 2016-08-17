@@ -4,7 +4,6 @@
 [![Build Status](https://travis-ci.org/mattlewis92/angular-bootstrap-calendar.svg?branch=master)](https://travis-ci.org/mattlewis92/angular-bootstrap-calendar)
 [![Bower version](https://badge.fury.io/bo/angular-bootstrap-calendar.svg)](http://badge.fury.io/bo/angular-bootstrap-calendar)
 [![npm version](https://badge.fury.io/js/angular-bootstrap-calendar.svg)](http://badge.fury.io/js/angular-bootstrap-calendar)
-[![peerDependency Status](https://david-dm.org/mattlewis92/angular-bootstrap-calendar/peer-status.svg)](https://david-dm.org/mattlewis92/angular-bootstrap-calendar#info=peerDependencies)
 [![devDependency Status](https://david-dm.org/mattlewis92/angular-bootstrap-calendar/dev-status.svg)](https://david-dm.org/mattlewis92/angular-bootstrap-calendar#info=devDependencies)
 [![GitHub issues](https://img.shields.io/github/issues/mattlewis92/angular-bootstrap-calendar.svg)](https://github.com/mattlewis92/angular-bootstrap-calendar/issues)
 [![GitHub stars](https://img.shields.io/github/stars/mattlewis92/angular-bootstrap-calendar.svg)](https://github.com/mattlewis92/angular-bootstrap-calendar/stargazers)
@@ -12,23 +11,29 @@
 
 ## Table of contents
 
+- [Demo](#demo)
 - [About](#about)
 - [Installation](#installation)
 - [Documentation](#documentation)
-- [Demo](#demo)
 - [Development](#development)
 - [License](#licence)
+
+## Demo
+
+https://mattlewis92.github.io/angular-bootstrap-calendar/
 
 ## About
 
 This plugin is an AngularJS port of the original jQuery bootstrap calendar that can be found here:
 http://bootstrap-calendar.azurewebsites.net/
 
-The layout and functionality is intended to be exactly the same, but without the overhead of including jQuery just for a calendar. 
+The layout and functionality is intended to be exactly the same, but without the overhead of including jQuery just for a calendar.
 
 All credits for the UI/UX and the less files of the calendar go to the original author.
 
 Pull requests are welcome.
+
+Looking for an angular2 version of this module? Development is underway here: https://github.com/mattlewis92/angular2-calendar
 
 ## Installation
 
@@ -39,7 +44,7 @@ The calendar has a few dependencies, these are as follows, and must be included 
 * [Moment.js](http://momentjs.com/)
 * [ui-bootstrap](http://angular-ui.github.io/bootstrap/) (0.14.0+, optional, include for collapse animations and tooltips.
 * [interact.js](http://interactjs.io/) (optional, include to allow drag and drop on the calendar)
-* [ngTouch](https://docs.angularjs.org/api/ngTouch) (optional, include if using the calendar on mobile devices)
+* [ngTouch](https://docs.angularjs.org/api/ngTouch) (optional, include if using the calendar on mobile devices. You will also need to enable `$touchProvider.ngClickOverrideEnabled(true)` on angular 1.5.0+)
 
 You can install through bower:
 
@@ -87,10 +92,6 @@ There is a single directive exposed to create the calendar, use it like so:
     view-title="calendarTitle"
     on-event-click="eventClicked(calendarEvent)"
     on-event-times-changed="calendarEvent.startsAt = calendarNewEventStart; calendarEvent.endsAt = calendarNewEventEnd"
-    edit-event-html="'<i class=\'glyphicon glyphicon-pencil\'></i>'"
-    delete-event-html="'<i class=\'glyphicon glyphicon-remove\'></i>'"
-    on-edit-event-click="eventEdited(calendarEvent)"
-    on-delete-event-click="eventDeleted(calendarEvent)"
     cell-is-open="true">
 </mwl-calendar>
 ```
@@ -117,27 +118,36 @@ An array of events to display on the calendar. For example:
 $scope.events = [
   {
     title: 'My event title', // The title of the event
-    type: 'info', // The type of the event (determines its color). Can be important, warning, info, inverse, success or special
     startsAt: new Date(2013,5,1,1), // A javascript date object for when the event starts
     endsAt: new Date(2014,8,26,15), // Optional - a javascript date object for when the event ends
-    editable: false, // If edit-event-html is set and this field is explicitly set to false then dont make it editable.
-    deletable: false, // If delete-event-html is set and this field is explicitly set to false then dont make it deleteable
+    color: { // can also be calendarConfig.colorTypes.warning for shortcuts to the deprecated event types
+      primary: '#e3bc08', // the primary event color (should be darker than secondary)
+      secondary: '#fdf1ba' // the secondary event color (should be lighter than primary)
+    },
+    actions: [{ // an array of actions that will be displayed next to the event title
+      label: '<i class=\'glyphicon glyphicon-pencil\'></i>', // the label of the action
+      cssClass: 'edit-action', // a CSS class that will be added to the action element so you can implement custom styling
+      onClick: function(args) { // the action that occurs when it is clicked. The first argument will be an object containing the parent event
+        console.log('Edit event', args.calendarEvent);
+      }
+    }],
     draggable: true, //Allow an event to be dragged and dropped
     resizable: true, //Allow an event to be resizable
     incrementsBadgeTotal: true, //If set to false then will not count towards the badge total amount on the month and year view
     recursOn: 'year', // If set the event will recur on the given period. Valid values are year or month
-    cssClass: 'a-css-class-name' //A CSS class (or more, just separate with spaces) that will be added to the event when it is displayed on each view. Useful for marking an event as selected / active etc
+    cssClass: 'a-css-class-name', //A CSS class (or more, just separate with spaces) that will be added to the event when it is displayed on each view. Useful for marking an event as selected / active etc
+    allDay: false // set to true to display the event as an all day event on the day view
   }
 ];
 ```
 
-`title`, `type` and `startsAt` are required for all events.
+`title`, `color` and `startsAt` are required for all events.
 
 ### view-title
 
 This variable will be assigned to the calendar title. If you want to change the formatting you can use the `calendarConfig` or just override the appropriate method in the `calendarTitle` factory.
 
-### on-event-click 
+### on-event-click
 
 This expression is called when an event is clicked on the calendar. `calendarEvent` can be used in the expression and contains the calendar event that was clicked on.
 
@@ -145,25 +155,13 @@ This expression is called when an event is clicked on the calendar. `calendarEve
 
 This expression is called when an event is dragged and dropped or resized into a different date / time on the calendar. The available values that are passed to the expression are: `calendarEvent`, `calendarNewEventStart`, `calendarNewEventEnd` and `calendarDraggedFromDate` (month view only). The directive won't change the event object and leaves that up to you to implement. Please note drag and drop is only available by including the [interact.js](http://interactjs.io/) library.
 
-### edit-event-html 
-
-If provided this piece of html will be displayed next to an event on the year and month view and will fire the function passed to edit-event-click.
-
-### delete-event-html 
-
-If provided this piece of html will be displayed next to an event on the year and month view and will fire the function passed to delete-event-click.
-
-### on-edit-event-click 
-
-This expression is called when an event edit link is clicked on the calendar. `calendarEvent` can be used in the expression and contains the calendar event that was clicked on.
-
-### on-delete-event-click 
-
-This expression is called when an event delete link is clicked on the calendar. `calendarEvent` can be used in the expression and contains the calendar event that was clicked on.
-
 ### on-timespan-click
 
 This expression is called when a month, day or hour on the calendar is clicked on the year, month and day views respectively. `calendarDate` can be used in the expression and contains the start of the month, day or hour that was clicked on. If on the month or year view `calendarCell` will contain cell data for the clicked day or month which you can then modify.
+
+### on-date-range-select
+
+This expression is called when a range of hours selected on the day view respectively. `calendarRangeStartDate` can be used in the expression and contains the start of the range, `calendarRangeEndDate` can be used in the expression and contains the end of the range.
 
 ### cell-is-open
 
@@ -171,23 +169,47 @@ A 2 way bound variable that when set to true will open the year or month view ce
 
 ### day-view-start
 
-An interpolated string in the form of hh:mm to start the day view at, e.g. setting it to 06:00 will start the day view at 6am
+An interpolated string in the form of hh:mm to start the day view at, e.g. setting it to 06:00 will start the day view at 6am. Any minutes must be divisible by the `day-view-split` value.
 
 ### day-view-end
 
-An interpolated string in the form of hh:mm to end the day view at, e.g. setting it to 22:00 will end the day view at 10pm
+An interpolated string in the form of hh:mm to end the day view at, e.g. setting it to 22:59 will end the day view at 11pm.
 
 ### day-view-split
 
 The number of chunks to split the day view hours up into. Can be either 10, 15 or 30. Default: 30
 
+### day-view-event-chunk-size
+
+The number of pixels to "snap" event drag and resizes to. Default: 30
+
 ### on-view-change-click
 
-An optional expression that is evaluated when the view is changed by clicking on a date. Return false from the expression function to disable the view change. `calendarDate` can be used in the expression and contains the date that was selected. `calendarNextView` is the view that the calendar will be changed to.  
+An optional expression that is evaluated when the view is changed by clicking on a date. Return false from the expression function to disable the view change. `calendarDate` can be used in the expression and contains the date that was selected. `calendarNextView` is the view that the calendar will be changed to.
 
 ### cell-modifier
 
-An optional expression that is evaluated on each cell generated for the year and month views. `calendarCell` can be used in the expression and is an object containing the current cell data which you can modify (see the `calendarHelper` service source code or just console.log it to see what data is available). If you add the `cssClass` property it will be applied to the cell.
+An optional expression that is evaluated on each cell generated for the year, month and day views. `calendarCell` can be used in the expression and is an object containing the current cell data which you can modify (see the `calendarHelper` service source code or just console.log it to see what data is available). If you add the `cssClass` property it will be applied to the cell.
+
+### slide-box-disabled
+
+If set it true it will disable the slidebox on the month and year views
+
+### custom-template-urls
+
+An object where the key is the template name to override and the value is a path to a custom template for that calendar instance. If not set it will fallback to the value of `calendarConfig.templates`.
+
+For example, to change the month view template on just one instance of the month view:
+```
+// in your controller
+$templateCache.put('my-custom-template.html', 'Custom month view template here');
+
+// in your template
+<mwl-calendar custom-template-urls="{calendarMonthView: 'my-custom-template.html'}"></mwl-calendar>
+```
+
+### template-scope
+An object containing a set of variables that will be available in a custom template as `vm.templateScope`
 
 ## Configuring the calendar default config
 
@@ -199,7 +221,7 @@ angular.module('myModule')
 
     console.log(calendarConfig); //view all available config
 
-    calendarConfig.templates.calendarMonthView = 'path/to/custom/template.html'; //change the month view template to a custom template
+    calendarConfig.templates.calendarMonthView = 'path/to/custom/template.html'; //change the month view template globally to a custom template
 
     calendarConfig.dateFormatter = 'moment'; //use either moment or angular to format dates on the calendar. Default angular. Setting this will override any date formats you have already set.
 
@@ -207,11 +229,9 @@ angular.module('myModule')
 
     calendarConfig.allDateFormats.moment.title.day = 'ddd D MMM'; //this will configure the day view title to be shorter
 
-    calendarConfig.i18nStrings.eventsLabel = 'Events'; //This will set the events label on the day view
+    calendarConfig.i18nStrings.weekNumber = 'Week {week}'; //This will set the week number hover label on the month view
 
     calendarConfig.displayAllMonthEvents = true; //This will display all events on a month view even if they're not in the current month. Default false.
-
-    calendarConfig.displayEventEndTimes = true; //This will display event end times on the month and year views. Default false.
 
     calendarConfig.showTimesOnWeekView = true; //Make the week view more like the day view, with the caveat that event end times are ignored.
 
@@ -220,7 +240,9 @@ angular.module('myModule')
 
 ## Custom directive templates
 
-All calendar template urls can be changed using the `calendarConfig` as illustrated above. 
+All calendar template urls can be changed using the `calendarConfig` as illustrated above.
+
+Please note that even patch releases may change templates which could break your app, so if using a custom template it is recommended that you pin the version of this module and review all changes when updating the version.
 
 ## The mwl-date-modifier directive
 
@@ -259,13 +281,13 @@ You can either use angular's date filter or moment.js to format dates. The defau
 ```javascript
 angular.module('myModule')
   .config(function(calendarConfig) {
-  
-    calendarConfig.dateFormatter = 'moment'; // use moment to format dates
- 
-  });
-```   
 
-Then you just need to include the appropriate locale files for your app. 
+    calendarConfig.dateFormatter = 'moment'; // use moment to format dates
+
+  });
+```
+
+Then you just need to include the appropriate locale files for your app.
 
 If you want to dynamically change the locale for angular and not include all of the available angular locale files [try this library](https://github.com/lgalfaso/angular-dynamic-locale).
 
@@ -273,7 +295,7 @@ Otherwise if using moment you can call `moment.locale('YOUR_LOCALE_STRING')` to 
 
 To set Monday as the first day of the week, configure it in moment like so (even if using angular for formatting dates):
 ```javascript
-moment.locale('en', {
+moment.locale('en_gb', {
   week : {
     dow : 1 // Monday is the first day of the week
   }
@@ -282,10 +304,6 @@ moment.locale('en', {
 
 For a full list of all available formats and their defaults see [calendarConfig.js](https://github.com/mattlewis92/angular-bootstrap-calendar/blob/master/src/services/calendarConfig.js)
 
-## Demo
-
-http://mattlewis92.github.io/angular-bootstrap-calendar/
-
 ## Development
 
 ### Prepare your environment
@@ -293,10 +311,10 @@ http://mattlewis92.github.io/angular-bootstrap-calendar/
 * Install local dev dependencies: `npm install` while current directory is this repo
 
 ### Development server
-Run `npm start` to start a development server on port 8000 with auto reload + run tests. 
+Run `npm start` to start a development server on port 8000 with auto reload + run tests.
 
 ### Testing
-Run `npm test` to run tests once or `npm run test:watch` to continually run tests (this is automatic when you run `npm start`). 
+Run `npm test` to run tests once or `npm run test:watch` to continually run tests (this is automatic when you run `npm start`).
 
 ### Build
 Run `npm run build` to build the project files in the dist folder

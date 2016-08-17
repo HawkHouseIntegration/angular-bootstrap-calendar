@@ -4,12 +4,12 @@ var angular = require('angular');
 
 angular
   .module('mwl.calendar')
-  .controller('MwlCalendarWeekCtrl', function($scope, $sce, moment, calendarHelper, calendarConfig) {
+  .controller('MwlCalendarWeekCtrl', function($scope, moment, calendarHelper, calendarConfig, calendarEventTitle) {
 
     var vm = this;
 
     vm.showTimes = calendarConfig.showTimesOnWeekView;
-    vm.$sce = $sce;
+    vm.calendarEventTitle = calendarEventTitle;
 
     $scope.$on('calendar.refreshView', function() {
       vm.dayViewSplit = vm.dayViewSplit || 30;
@@ -51,6 +51,11 @@ angular
       });
     };
 
+    vm.eventDropped = function(event, date) {
+      var daysDiff = moment(date).diff(moment(event.startsAt), 'days');
+      vm.weekDragged(event, daysDiff);
+    };
+
     vm.weekResized = function(event, edge, daysDiff) {
 
       var start = moment(event.startsAt);
@@ -75,10 +80,10 @@ angular
     };
 
   })
-  .directive('mwlCalendarWeek', function(calendarConfig) {
+  .directive('mwlCalendarWeek', function() {
 
     return {
-      templateUrl: calendarConfig.templates.calendarWeekView,
+      template: '<div mwl-dynamic-directive-template name="calendarWeekView" overrides="vm.customTemplateUrls"></div>',
       restrict: 'E',
       require: '^mwlCalendar',
       scope: {
@@ -89,7 +94,12 @@ angular
         dayViewStart: '=',
         dayViewEnd: '=',
         dayViewSplit: '=',
-        onTimespanClick: '='
+        dayViewEventChunkSize: '=',
+        onTimespanClick: '=',
+        onDateRangeSelect: '=',
+        customTemplateUrls: '=?',
+        cellModifier: '=',
+        templateScope: '='
       },
       controller: 'MwlCalendarWeekCtrl as vm',
       link: function(scope, element, attrs, calendarCtrl) {

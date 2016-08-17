@@ -1,6 +1,7 @@
 'use strict';
 
 var angular = require('angular');
+var LOG_PREFIX = 'Bootstrap calendar:';
 
 angular
   .module('mwl.calendar')
@@ -36,19 +37,17 @@ angular
 
     function eventIsValid(event) {
       if (!event.startsAt) {
-        $log.warn('Bootstrap calendar: ', 'Event is missing the startsAt field', event);
+        $log.warn(LOG_PREFIX, 'Event is missing the startsAt field', event);
+      } else if (!angular.isDate(event.startsAt)) {
+        $log.warn(LOG_PREFIX, 'Event startsAt should be a javascript date object. Do `new Date(event.startsAt)` to fix it.', event);
       }
 
-      if (!angular.isDate(event.startsAt)) {
-        $log.warn('Bootstrap calendar: ', 'Event startsAt should be a javascript date object', event);
-      }
-
-      if (angular.isDefined(event.endsAt)) {
+      if (event.endsAt) {
         if (!angular.isDate(event.endsAt)) {
-          $log.warn('Bootstrap calendar: ', 'Event endsAt should be a javascript date object', event);
+          $log.warn(LOG_PREFIX, 'Event endsAt should be a javascript date object. Do `new Date(event.endsAt)` to fix it.', event);
         }
         if (moment(event.startsAt).isAfter(moment(event.endsAt))) {
-          $log.warn('Bootstrap calendar: ', 'Event cannot start after it finishes', event);
+          $log.warn(LOG_PREFIX, 'Event cannot start after it finishes', event);
         }
       }
 
@@ -115,29 +114,30 @@ angular
     });
 
   })
-  .directive('mwlCalendar', function(calendarConfig) {
+  .directive('mwlCalendar', function() {
 
     return {
-      templateUrl: calendarConfig.templates.calendar,
+      template: '<div mwl-dynamic-directive-template name="calendar" overrides="vm.customTemplateUrls"></div>',
       restrict: 'E',
       scope: {
         events: '=',
         view: '=',
         viewTitle: '=?',
         viewDate: '=',
-        editEventHtml: '=?',
-        deleteEventHtml: '=?',
         cellIsOpen: '=?',
+        slideBoxDisabled: '=?',
+        customTemplateUrls: '=?',
         onEventClick: '&',
         onEventTimesChanged: '&',
-        onEditEventClick: '&',
-        onDeleteEventClick: '&',
         onTimespanClick: '&',
+        onDateRangeSelect: '&?',
         onViewChangeClick: '&',
         cellModifier: '&',
         dayViewStart: '@',
         dayViewEnd: '@',
-        dayViewSplit: '@'
+        dayViewSplit: '@',
+        dayViewEventChunkSize: '@',
+        templateScope: '=?'
       },
       controller: 'MwlCalendarCtrl as vm',
       bindToController: true

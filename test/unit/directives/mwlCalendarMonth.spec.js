@@ -11,6 +11,8 @@ describe('mwlCalendarMonth directive', function() {
     directiveScope,
     showModal,
     calendarHelper,
+    calendarConfig,
+    $templateCache,
     template =
       '<mwl-calendar-month ' +
       'events="events" ' +
@@ -24,6 +26,8 @@ describe('mwlCalendarMonth directive', function() {
       'day-view-split="dayViewSplit || 30" ' +
       'cell-template-url="{{ monthCellTemplateUrl }}" ' +
       'cell-events-template-url="{{ monthCellEventsTemplateUrl }}" ' +
+      'template-scope="templateScope"' +
+      'custom-template-urls="customTemplateUrls"' +
       '></mwl-calendar-month>';
   var calendarDay = new Date(2015, 4, 1);
 
@@ -32,7 +36,7 @@ describe('mwlCalendarMonth directive', function() {
     vm.viewDate = calendarDay;
     vm.cellIsOpen = true;
     vm.dayViewStart = '06:00';
-    vm.dayViewEnd = '22:00';
+    vm.dayViewEnd = '22:59';
     vm.dayViewsplit = 30;
     vm.events = [
       {
@@ -80,9 +84,11 @@ describe('mwlCalendarMonth directive', function() {
 
   beforeEach(angular.mock.module('mwl.calendar'));
 
-  beforeEach(angular.mock.inject(function($compile, _$rootScope_, _calendarHelper_) {
+  beforeEach(angular.mock.inject(function($compile, _$rootScope_, _calendarHelper_, _calendarConfig_, _$templateCache_) {
     $rootScope = _$rootScope_;
     calendarHelper = _calendarHelper_;
+    calendarConfig = _calendarConfig_;
+    $templateCache = _$templateCache_;
     scope = $rootScope.$new();
     prepareScope(scope);
     element = angular.element(template);
@@ -94,7 +100,7 @@ describe('mwlCalendarMonth directive', function() {
   }));
 
   it('should get the new month view when calendar refreshes and show the list of events for the current day if required', function() {
-    var monthView = [{date: moment(calendarDay), inMonth: true}];
+    var monthView = {days: [{date: moment(calendarDay), inMonth: true}], rowOffsets: []};
     sinon.stub(calendarHelper, 'getWeekDayNames').returns(['Mon', 'Tu']);
     sinon.stub(calendarHelper, 'getMonthView').returns(monthView);
     sinon.stub(calendarHelper, 'getWeekViewWithTimes').returns({event: 'event2'});
@@ -102,7 +108,8 @@ describe('mwlCalendarMonth directive', function() {
     expect(calendarHelper.getWeekDayNames).to.have.been.called;
     expect(calendarHelper.getMonthView).to.have.been.calledWith(scope.events, scope.viewDate);
     expect(MwlCalendarCtrl.weekDays).to.eql(['Mon', 'Tu']);
-    expect(MwlCalendarCtrl.view).to.equal(monthView);
+    expect(MwlCalendarCtrl.view).to.equal(monthView.days);
+    expect(MwlCalendarCtrl.monthOffsets).to.equal(monthView.rowOffsets);
     expect(MwlCalendarCtrl.openRowIndex).to.equal(0);
     expect(MwlCalendarCtrl.openDayIndex).to.equal(0);
   });
@@ -134,7 +141,12 @@ describe('mwlCalendarMonth directive', function() {
     expect(MwlCalendarCtrl.openDayIndex).to.be.undefined;
   });
 
-  it('should highlight an event across multiple days', function() {
+  it('should highlight the month with the events color', function() {
+
+    scope.events[0].color = {
+      secondary: 'pink'
+    };
+
     var monthView = [{
       date: moment(calendarDay),
       inMonth: true,
@@ -151,7 +163,9 @@ describe('mwlCalendarMonth directive', function() {
 
     MwlCalendarCtrl.view = monthView;
     MwlCalendarCtrl.highlightEvent(scope.events[0], true);
-    expect(monthView[0].highlightClass).to.equal('day-highlight dh-event-warning');
+    expect(monthView[0].backgroundColor).to.equal('pink');
+    expect(monthView[1].backgroundColor).to.equal('pink');
+
   });
 
   it('should call the callback function when you finish dropping an event', function() {
@@ -177,6 +191,88 @@ describe('mwlCalendarMonth directive', function() {
       calendarNewEventEnd: null,
       calendarDraggedFromDate: draggedFromDate
     });
+  });
+
+  it('should get the week label', function() {
+    expect(MwlCalendarCtrl.getWeekNumberLabel({date: moment().startOf('year').endOf('week').add(1, 'day')})).to.equal('Week 1');
+  });
+
+  it('should allow the week label option to be a function', function() {
+    calendarConfig.i18nStrings.weekNumber = function(params) {
+      return 'My custom function ' + params.weekNumber;
+    };
+    expect(MwlCalendarCtrl.getWeekNumberLabel({date: moment().startOf('year').endOf('week').add(1, 'day')})).to.equal('My custom function 1');
+  });
+
+  it('should initialise the date range select', function() {
+
+    var date = moment();
+    MwlCalendarCtrl.onDragSelectStart({date: date});
+    expect(MwlCalendarCtrl.dateRangeSelect).to.deep.equal({
+      startDate: date,
+      endDate: date
+    });
+
+  });
+
+  it('should update the date ranges end date', function() {
+    var date = moment();
+    MwlCalendarCtrl.dateRangeSelect = {
+      startDate: 'date1',
+      endDate: 'date2'
+    };
+    MwlCalendarCtrl.onDragSelectMove({date: date});
+    expect(MwlCalendarCtrl.dateRangeSelect).to.deep.equal({
+      startDate: 'date1',
+      endDate: date
+    });
+  });
+
+  it('should not throw if there is no date range being selected', function() {
+    var date = moment();
+    MwlCalendarCtrl.dateRangeSelect = null;
+    expect(function() {
+      MwlCalendarCtrl.onDragSelectMove({date: date});
+    }).not.to.throw();
+  });
+
+  it('should call the onDateRangeSelect callback if there is a valid date range', function() {
+    MwlCalendarCtrl.onDateRangeSelect = sinon.spy();
+    var date1 = moment();
+    var date2 = moment().add(1, 'day');
+    MwlCalendarCtrl.dateRangeSelect = {
+      startDate: date1,
+      endDate: moment().add(1, 'second')
+    };
+    MwlCalendarCtrl.onDragSelectEnd({date: date2});
+    expect(MwlCalendarCtrl.onDateRangeSelect).to.have.been.calledWith({
+      calendarRangeStartDate: date1.startOf('day').toDate(),
+      calendarRangeEndDate: date2.endOf('day').toDate()
+    });
+    expect(MwlCalendarCtrl.dateRangeSelect).to.be.undefined;
+  });
+
+  it('should not call the onDateRangeSelect callback if there is an invalid date range', function() {
+    MwlCalendarCtrl.onDateRangeSelect = sinon.spy();
+    var date1 = moment();
+    var date2 = moment().subtract(1, 'day');
+    MwlCalendarCtrl.dateRangeSelect = {
+      startDate: date1,
+      endDate: moment().subtract(1, 'second')
+    };
+    MwlCalendarCtrl.onDragSelectEnd({date: date2});
+    expect(MwlCalendarCtrl.onDateRangeSelect).not.to.have.been.called;
+    expect(MwlCalendarCtrl.dateRangeSelect).to.be.undefined;
+  });
+
+  it('should pass in a scope object that is accessible from the custom template', function() {
+    scope.templateScope = {
+      foo: 'world'
+    };
+    $templateCache.put('customMonth.html', 'Hello {{ vm.templateScope.foo }}');
+    scope.customTemplateUrls = {calendarMonthView: 'customMonth.html'};
+    scope.$apply();
+    expect(element.text()).to.deep.equal('Hello world');
   });
 
 });
