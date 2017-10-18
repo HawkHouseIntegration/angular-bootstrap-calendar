@@ -179,6 +179,11 @@ describe('calendarHelper', function() {
       moment.locale('en');
     }));
 
+    it('should skip the excluded days', function() {
+      var weekdays = calendarHelper.getWeekDayNames([0, 6]);
+      expect(weekdays).to.eql(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
+    });
+
   });
 
   describe('getYearView', function() {
@@ -445,8 +450,8 @@ describe('calendarHelper', function() {
     });
 
     it('should only contain events for that week', function() {
-      expect(weekView.eventRows[0].row[0].event).to.eql(events[0]);
-      expect(weekView.eventRows[1].row[0].event).to.eql(events[1]);
+      expect(weekView.eventRows[0].row[0].event).to.eql(events[1]);
+      expect(weekView.eventRows[1].row[0].event).to.eql(events[0]);
     });
 
     describe('setting the correct span and offset', function() {
@@ -484,6 +489,15 @@ describe('calendarHelper', function() {
           endsAt: new Date(2015, 10, 21, 15)
         }], calendarDay);
         expect(weekView.eventRows[0].row[0].span).to.equal(5);
+        expect(weekView.eventRows[0].row[0].offset).to.equal(2);
+      });
+
+      it('should pass when the event spans exactly one day', function() {
+        weekView = calendarHelper.getWeekView([{
+          startsAt: moment(new Date(2015, 9, 20)).startOf('day').toDate(),
+          endsAt: moment(new Date(2015, 9, 20)).endOf('day').toDate()
+        }], calendarDay);
+        expect(weekView.eventRows[0].row[0].span).to.equal(1);
         expect(weekView.eventRows[0].row[0].offset).to.equal(2);
       });
 
